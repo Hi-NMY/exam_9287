@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.test2.mapper.AMapper">
+
+    <resultMap id="cityDataResultMap" type="com.example.test2.bean.ABean">
+        <id property="year" column="year"/>
+        <collection  property="riskTop" ofType="com.example.test2.bean.BBean">
+            <result column="city" property="city"/>
+            <result column="risk_index" property="riskIndex"/>
+            <result column="r" property="rank"/>
+        </collection>
+    </resultMap>
+    <select id="queryCrimeStat" resultMap="cityDataResultMap">
+        SELECT
+            YEAR,
+            city,
+            risk_index,
+            r
+        from
+            (SELECT
+                YEAR,
+                city,
+                risk_index,
+                (ROW_NUMBER() OVER( PARTITION BY YEAR ORDER BY risk_index DESC )) AS r
+                FROM
+                (
+                    SELECT YEAR(subquery.date) AS YEAR,
+                    city,
+                    AVG(count) * 0.8 + AVG(victims) * 0.2 AS risk_index
+                    FROM
+                    (
+                        SELECT
+                        DATE(start_date_time) AS date,
+                        city,
+                        COUNT(incident_id) AS count,
+                        SUM(victims) AS victims
+                        FROM
+                        crimes
+                        GROUP BY
+                        date,
+                        city
+                    )
+                    AS subquery
+                    GROUP BY
+                    YEAR,
+                    city
+                    HAVING
+                    risk_index IS NOT NULL
+                    ORDER BY
+                    YEAR,
+                    risk_index DESC
+                )
+            AS temp
+            ) AS temp1
+        WHERE r <![CDATA[<=]]> 3
+    </select>
+
+    <insert id="addCrime" useGeneratedKeys="true" keyProperty="incidentId">
+        insert into crimes (offence_code,dispatch_time,victims,city,start_date_time)
+                    values (#{offenceCode},#{dispatchTime},#{victims},#{city},#{startDateTime})
+    </insert>
+</mapper>

@@ -38,7 +38,7 @@ UPDATE crime_data
 SET city = UPPER(city);
 
 CREATE TABLE crimes (
-    incident_id INT PRIMARY KEY,
+    incident_id INT AUTO_INCREMENT PRIMARY KEY ,
     offence_code INT,
 		dispatch_time DATETIME,
 		victims INT,
@@ -47,7 +47,7 @@ CREATE TABLE crimes (
 );
 
 CREATE TABLE offences (
-    offence_code INT PRIMARY KEY,
+    offence_code INT AUTO_INCREMENT PRIMARY KEY,
     crime_name1 VARCHAR(255),
 		crime_name2 VARCHAR(255),
 		crime_name3 VARCHAR(255)
@@ -61,4 +61,3 @@ FROM crime_data;
 INSERT INTO offences (offence_code, crime_name1, crime_name2, crime_name3)
 SELECT DISTINCT offence_code, COALESCE(crime_name1, ''),  COALESCE(crime_name2, ''),  COALESCE(crime_name3, '')
 FROM crime_data;
-
